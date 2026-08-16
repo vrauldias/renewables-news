@@ -21,6 +21,14 @@ PRIVATE_KEY_FILE_PATH = os.getenv("PRIVATE_KEY_FILE_PATH", "private_key.pem")
 SHAREPOINT_SITE_URL = os.getenv("SHAREPOINT_SITE_URL")
 SHAREPOINT_LIST_NAME = os.getenv("SHAREPOINT_LIST_NAME")
 
+# Nomes INTERNOS (não os nomes de exibição) das colunas de escolha múltipla da lista.
+# Veja docs/microsoft-list.md para saber como descobrir o nome interno das suas colunas.
+CAMPO_CATEGORIAS = os.getenv("SHAREPOINT_FIELD_CATEGORIES", "CategoriasNoticias")
+CAMPO_IDIOMAS = os.getenv("SHAREPOINT_FIELD_LANGUAGES", "EscolherLinguas")
+
+# Idioma assumido quando o usuário não seleciona nenhum na lista
+IDIOMA_PADRAO = os.getenv("IDIOMA_PADRAO", "Português")
+
 # Arquivos de mapeamento
 LANGUAGES_MAPPING_FILE = "languages-to-gnews.txt"
 BASE_KEYWORD_FILE = "keywords-to-gnews.txt" # Padrão (pt-419)
@@ -145,7 +153,7 @@ def get_latest_preferences(lang_map, keyword_dicts):
 
         items = sp_ops.get_list_items(
             list_title=SHAREPOINT_LIST_NAME,
-            select_fields=["Quais_x0020_", "Author/EMail", "Modified", "EscolherL_x00ed_nguas"],
+            select_fields=[CAMPO_CATEGORIAS, "Author/EMail", "Modified", CAMPO_IDIOMAS],
             expand_fields=["Author"]
         )
         print(f"Encontrados {len(items)} registros na lista.")
@@ -159,13 +167,13 @@ def get_latest_preferences(lang_map, keyword_dicts):
             modified_date = datetime.strptime(modified_str, '%Y-%m-%dT%H:%M:%SZ')
 
             if email not in latest_preferences or modified_date > latest_preferences[email]['timestamp']:
-                cat_data = item.get('Quais_x0020_', {})
+                cat_data = item.get(CAMPO_CATEGORIAS, {})
                 categories = cat_data.get('results', []) if isinstance(cat_data, dict) else []
 
-                lang_data = item.get('EscolherL_x00ed_nguas', {})
+                lang_data = item.get(CAMPO_IDIOMAS, {})
                 langs = lang_data.get('results', []) if isinstance(lang_data, dict) else []
 
-                if not langs: langs = ["Português"]
+                if not langs: langs = [IDIOMA_PADRAO]
 
                 latest_preferences[email] = {
                     'timestamp': modified_date,

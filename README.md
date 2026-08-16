@@ -4,7 +4,7 @@ Buscador automático de notícias sobre combustíveis renováveis e bioenergia (
 
 ## Como funciona
 
-1. **`coleta_preferencias.py`** — busca as preferências dos destinatários (quais categorias e idiomas cada um quer receber) em uma lista do SharePoint, autenticando via MSAL com certificado, e gera `preferencias.json`.
+1. **`coleta_preferencias.py`** — busca as preferências dos destinatários (quais categorias e idiomas cada um quer receber) em uma lista do Microsoft Lists, autenticando via MSAL com certificado, e gera `preferencias.json`. Cada pessoa preenche um formulário ligado à lista; o script considera sempre a resposta mais recente de cada e-mail. Veja **[docs/microsoft-list.md](docs/microsoft-list.md)** para montar a lista e o formulário do zero.
 2. **`main.py`** — orquestra todo o processo: obtém o token do Microsoft Graph, roda a etapa 1, busca as notícias brutas por termo/idioma no Google News, chama o filtro de IA, monta o HTML e envia um e-mail por destinatário.
 3. **`filtro_ia.py`** — usa a API da Groq (compatível com a API da OpenAI) para descartar notícias irrelevantes, resumir as relevantes em uma frase e agrupar notícias que falam do mesmo evento/fato (com fallback local via `difflib` caso a IA falhe).
 
@@ -32,7 +32,9 @@ Copie `.env.example` para `.env` e preencha todos os valores (ver seção abaixo
 | `EMAIL_REMETENTE` | Caixa de e-mail (licenciada no Microsoft 365) a partir da qual os boletins são enviados via Graph. |
 | `NOME_BOLETIM` | Nome exibido no assunto do e-mail e no cabeçalho do boletim. |
 | `LINK_PREFERENCIAS` | Link exibido no rodapé do e-mail para o destinatário alterar suas preferências. |
-| `SHAREPOINT_SITE_URL`, `SHAREPOINT_LIST_NAME` | URL do site e nome da lista do SharePoint de onde as preferências dos destinatários são lidas. |
+| `SHAREPOINT_SITE_URL`, `SHAREPOINT_LIST_NAME` | URL do site e nome da lista do Microsoft Lists de onde as preferências dos destinatários são lidas. |
+| `SHAREPOINT_FIELD_CATEGORIES`, `SHAREPOINT_FIELD_LANGUAGES` | Nomes **internos** das colunas de escolha múltipla da lista — podem diferir do nome exibido. Ver [docs/microsoft-list.md](docs/microsoft-list.md#3-descobrir-o-nome-interno-das-colunas). |
+| `IDIOMA_PADRAO` | Idioma assumido quando o destinatário não seleciona nenhum. |
 
 ## Personalizando as categorias de busca
 
@@ -40,11 +42,13 @@ As categorias e termos de busca ficam em arquivos `.txt` separados por tabulaç�
 
 - `keywords-to-gnews.txt` — dicionário padrão (português).
 - `keywords-to-gnews-en.txt`, `keywords-to-gnews-de.txt` — dicionários para inglês e alemão.
-- `languages-to-gnews.txt` — mapeia o nome do idioma (como aparece no SharePoint) para o código de idioma usado pelo `gnews`.
+- `languages-to-gnews.txt` — mapeia o nome do idioma (como aparece na lista) para o código de idioma usado pelo `gnews`.
+
+A primeira coluna de cada arquivo precisa bater exatamente com as opções cadastradas nas colunas de escolha da lista — é por esse texto que o de-para é feito.
 
 Para adaptar o projeto a outro tema (não apenas combustíveis renováveis), basta editar essas listas com as categorias e termos desejados — o restante do pipeline (busca, filtro por IA, resumo, agrupamento e envio) não precisa mudar.
 
-Se um destinatário não usa SharePoint para gerenciar preferências, você pode ignorar `coleta_preferencias.py` e gerar `preferencias.json` manualmente ou por outro processo — o formato esperado é uma lista de objetos com `email`, `keywords_for_display` e `search_configs` (veja `main.py` para os detalhes).
+Se você não usa Microsoft Lists para gerenciar preferências, pode ignorar `coleta_preferencias.py` e gerar `preferencias.json` manualmente ou por outro processo — o formato esperado está documentado em [docs/microsoft-list.md](docs/microsoft-list.md#5-formato-dos-dados).
 
 ## Execução
 

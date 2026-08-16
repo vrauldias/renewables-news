@@ -1,0 +1,23 @@
+# File: requirements.txt
+
+# Used in main.py for fetching news from Google News
+gnews
+
+# Used in main.py for handling timezones
+pytz
+
+# Used in filtro_ia.py to interact with the Groq API (OpenAI-compatible)
+openai
+python-dotenv
+
+# Used in filtro_ia.py to make HTTP requests
+requests
+
+# Used in filtro_ia.py to parse HTML content
+beautifulsoup4
+
+# Used in filtro_ia.py for retry logic in API calls
+tenacity
+
+# Used in coleta_preferencias.py for modern authentication with Microsoft Entra ID
+msal

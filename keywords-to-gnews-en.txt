@@ -1,0 +1,16 @@
+MSLists-keyword	GNews-keyword
+Renovabio	RenovaBio OR Brazilian biofuels policy
+Sustainable Aviation Fuel	SAF OR Sustainable Aviation Fuel OR biojet fuel
+Biometano	biomethane OR RNG OR renewable natural gas
+Biogás	biogas
+Usinas de Açúcar e Álcool	sugar and ethanol plants OR ethanol industry OR sugarcane mills
+Agroindústrias	agribusiness OR agroindustry OR food processing industry
+Papel & Celulose	Pulp & Paper OR Suzano OR Klabin OR Bracell OR Arauco
+Combustível Marítimo	maritime fuel OR green methanol OR LNG OR bunker OR Sustainable Maritime Fuel
+Macaúba	macauba OR acelen
+Capiaçu	elephant grass OR capiacu
+Biochar	biochar
+CO2 biogênico	biogenic CO2 OR biogenic carbon
+Biodiesel	biodiesel OR HVO
+Amônia verde	green ammonia
+Hidrogênio verde	green hydrogen OR GH2

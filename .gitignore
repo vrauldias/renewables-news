@@ -1,0 +1,27 @@
+# Segredos e credenciais
+.env
+*.pem
+*.key
+*.pfx
+*.cer
+*.crt
+
+# Identidade visual própria (cabeçalho do e-mail)
+header.png
+
+# Dados gerados em tempo de execução (contêm dados de destinatários e cache de notícias)
+preferencias.json
+cache_bruto.json
+cache_filtrado.json
+links_enviados.txt
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# SO / editores
+.DS_Store
+Thumbs.db

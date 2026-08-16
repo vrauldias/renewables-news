@@ -1,0 +1,16 @@
+MSLists-keyword	GNews-keyword
+Renovabio	RenovaBio
+Sustainable Aviation Fuel	SAF OR Nachhaltiger Flugkraftstoff OR Bio-Kerosin
+Biometano	Biomethan OR Bio-Erdgas
+Biogás	Biogas
+Usinas de Açúcar e Álcool	Zucker- und Ethanolanlagen OR Ethanolindustrie OR Zuckerrohrmühlen
+Agroindústrias	Agrarindustrie OR Lebensmittelindustrie OR Agribusiness
+Papel & Celulose	Zellstoff & Papier OR Suzano OR Klabin OR Bracell OR Arauco
+Combustível Marítimo	Schiffskraftstoff OR Grünes Methanol OR LNG OR Bunkeröl OR Sustainable Maritime Fuel
+Macaúba	Macauba OR Acelen
+Capiaçu	Elefantengras OR Capiacu
+Biochar	Biochar OR Pflanzenkohle
+CO2 biogênico	biogenes CO2 OR biogener Kohlenstoff
+Biodiesel	Biodiesel OR HVO
+Amônia verde	Grünes Ammoniak
+Hidrogênio verde	Grüner Wasserstoff

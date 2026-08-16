@@ -1,0 +1,8 @@
+MSLists-keyword	GNews-keyword
+Sustainable Aviation Fuel	SAF OR Sustainable Aviation Fuel OR BioQAV OR Bioquerosene OR Combustível de Aviação Sustentável
+Usinas de Açúcar e Álcool	usina de cana OR setor sucroenergético OR açúcar e álcool OR etanol
+Papel & Celulose	Papel celulose OR Suzano OR Klabin OR Bracell OR Arauco
+Combustível Marítimo	combustível marítimo OR metanol OR GNL OR diesel marítimo OR Sustainable Maritime Fuel
+Macaúba	macaúba OR acelen OR refinaria de mataripe
+Capiaçu	capiaçu OR capim elefante
+Biochar	biochar OR biocarbono

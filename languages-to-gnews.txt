@@ -1,0 +1,4 @@
+SharePoint-Language	GNews-Code
+Inglês	en
+Português	pt-419
+Alemão	de

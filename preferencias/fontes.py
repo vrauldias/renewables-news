@@ -21,6 +21,7 @@ o resultado pertence.
 import json
 import logging
 import os
+import re
 import sys
 import urllib.parse
 from datetime import datetime
@@ -96,22 +97,27 @@ def _do_arquivo():
     with open(config.ARQUIVO_PREFERENCIAS, "r", encoding="utf-8") as arquivo:
         perfis = json.load(arquivo)
 
-    # Aceita o formato antigo (query_string) para não quebrar quem já tem o arquivo.
     mapa_idiomas = carregar_mapeamento(config.ARQUIVO_IDIOMAS)
     dicionarios = carregar_dicionarios(mapa_idiomas)
     for perfil in perfis:
-        for configuracao in perfil.get("search_configs", []):
-            if "termos" in configuracao:
-                continue
-            import re
-            expressoes = re.findall(r'"(.*?)"', configuracao.get("query_string", ""))
-            configuracao["termos"] = [
-                {"categoria": perfil.get("keywords_for_display", [""])[0] if expressoes else "",
-                 "expressao": e}
-                for e in expressoes
-            ]
-    del dicionarios  # só carregado para validar a existência dos arquivos
+        _converter_formato_antigo(perfil, dicionarios)
     return perfis
+
+
+def _converter_formato_antigo(perfil, dicionarios):
+    """Aceita o `query_string` da versão anterior, para não quebrar arquivos
+    que já existam. A categoria de cada expressão é recuperada invertendo o
+    dicionário de palavras-chave do idioma."""
+    for configuracao in perfil.get("search_configs", []):
+        if "termos" in configuracao:
+            continue
+        dicionario = dicionarios.get(configuracao.get("lang_code"), {})
+        por_expressao = {v: k for k, v in dicionario.items()}
+        expressoes = re.findall(r'"(.*?)"', configuracao.get("query_string", ""))
+        configuracao["termos"] = [
+            {"categoria": por_expressao.get(expressao, expressao), "expressao": expressao}
+            for expressao in expressoes
+        ]
 
 
 # =============================================================================

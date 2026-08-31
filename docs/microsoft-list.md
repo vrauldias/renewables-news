@@ -1,6 +1,6 @@
 # Montando a lista de preferências no Microsoft Lists
 
-O script `coleta_preferencias.py` lê as preferências dos destinatários de uma
+O módulo `preferencias/fontes.py` lê as preferências dos destinatários de uma
 lista do **Microsoft Lists** (que por baixo é uma lista do SharePoint, acessada
 aqui pela REST API do SharePoint). Este documento descreve como montar essa
 lista e o formulário do zero.
@@ -130,9 +130,12 @@ Exportando a lista para CSV, cada linha fica assim (veja
 
 As colunas de escolha múltipla chegam pela API como um objeto com uma lista
 dentro (`{"results": ["Biochar", "Capiaçu"]}`) — é assim que
-`coleta_preferencias.py` as lê.
+`preferencias/fontes.py` as lê.
 
-Ao final, o script grava `preferencias.json` já traduzido para termos de busca:
+Ao final, o módulo grava `preferencias.json` já traduzido para termos de busca.
+Cada categoria vira um par `categoria`/`expressao`: a expressão é quebrada nos
+seus termos na hora da busca (cada termo vai separado ao Google News), e a
+categoria é o que liga o resultado de volta às preferências do destinatário.
 
 ```json
 [
@@ -142,11 +145,17 @@ Ao final, o script grava `preferencias.json` já traduzido para termos de busca:
     "search_configs": [
       {
         "lang_code": "pt-419",
-        "query_string": "\"biochar OR biocarbono\" OR \"capiaçu OR capim elefante\""
+        "termos": [
+          {"categoria": "Biochar", "expressao": "biochar OR biocarbono"},
+          {"categoria": "Capiaçu", "expressao": "capiaçu OR capim elefante"}
+        ]
       },
       {
         "lang_code": "en",
-        "query_string": "\"biochar\" OR \"elephant grass OR capiacu\""
+        "termos": [
+          {"categoria": "Biochar", "expressao": "biochar"},
+          {"categoria": "Capiaçu", "expressao": "elephant grass OR capiacu"}
+        ]
       }
     ]
   }
@@ -156,12 +165,11 @@ Ao final, o script grava `preferencias.json` já traduzido para termos de busca:
 ## Alternativa sem Microsoft Lists
 
 O Microsoft Lists é usado **apenas** para coletar preferências. Se você não tem
-Microsoft 365 — ou quer só rodar para si mesmo — pule `coleta_preferencias.py`
-por completo e escreva o `preferencias.json` acima na mão (ou gere a partir de
-um Google Forms, um banco de dados, o que preferir). O `main.py` só precisa do
-arquivo no formato mostrado.
+Microsoft 365 — ou quer só rodar para si mesmo — ponha `FONTE_PREFERENCIAS=arquivo`
+no `.env` e escreva o `preferencias.json` acima na mão (ou gere a partir de um
+Google Forms, um banco de dados, o que preferir). Use
+[`preferencias.exemplo.json`](../preferencias.exemplo.json) como modelo.
 
-Nesse cenário, `SHAREPOINT_*` no `.env` ficam vazios e a ETAPA 1 do `main.py`
-pode ser comentada. O envio de e-mail via Microsoft Graph continua exigindo o
-registro no Entra ID — para substituí-lo por SMTP comum, troque a função
-`enviar_email_graph()` em `main.py` por uma chamada `smtplib`.
+Nesse cenário, as variáveis `SHAREPOINT_*` ficam vazias. O envio de e-mail via
+Microsoft Graph continua exigindo o registro no Entra ID — para substituí-lo por
+SMTP comum, troque `entrega/graph.py` por uma implementação com `smtplib`.

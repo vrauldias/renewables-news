@@ -25,3 +25,7 @@ venv/
 # SO / editores
 .DS_Store
 Thumbs.db
+
+# Historico de eventos e previa local
+historico_eventos.json
+previa.html

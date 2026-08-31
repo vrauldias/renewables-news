@@ -1,54 +1,144 @@
 # Radar de Combustíveis Renováveis
 
-Buscador automático de notícias sobre combustíveis renováveis e bioenergia (SAF, biometano, biogás, biodiesel, hidrogênio verde, amônia verde, etc.). O sistema coleta as preferências de cada destinatário, busca notícias recentes no Google News, usa um LLM para filtrar o que é realmente relevante, resume e agrupa notícias sobre o mesmo fato, e envia um boletim por e-mail personalizado para cada pessoa.
+Buscador automático de notícias sobre combustíveis renováveis e bioenergia
+(SAF, biometano, biogás, biodiesel, hidrogênio verde, amônia verde, etc.).
 
-## Como funciona
+O sistema lê as preferências de cada destinatário, busca notícias recentes no
+Google News, usa um LLM para descartar o irrelevante, **agrupa as notícias que
+falam do mesmo fato entre todos os portais e idiomas**, resume cada evento em
+uma frase e envia um boletim personalizado por e-mail.
 
-1. **`coleta_preferencias.py`** — busca as preferências dos destinatários (quais categorias e idiomas cada um quer receber) em uma lista do Microsoft Lists, autenticando via MSAL com certificado, e gera `preferencias.json`. Cada pessoa preenche um formulário ligado à lista; o script considera sempre a resposta mais recente de cada e-mail. Veja **[docs/microsoft-list.md](docs/microsoft-list.md)** para montar a lista e o formulário do zero.
-2. **`main.py`** — orquestra todo o processo: obtém o token do Microsoft Graph, roda a etapa 1, busca as notícias brutas por termo/idioma no Google News, chama o filtro de IA, monta o HTML e envia um e-mail por destinatário.
-3. **`filtro_ia.py`** — usa a API da Groq (compatível com a API da OpenAI) para descartar notícias irrelevantes, resumir as relevantes em uma frase e agrupar notícias que falam do mesmo evento/fato (com fallback local via `difflib` caso a IA falhe).
+O agrupamento é a parte não trivial e tem documento próprio:
+**[docs/agrupamento.md](docs/agrupamento.md)** — inclui a medição em 412 edições
+reais que motivou a reescrita, as causas de falha da versão anterior e o
+algoritmo atual.
+
+## O pipeline
+
+```
+preferências → coleta → triagem → AGRUPAMENTO GLOBAL → resumo → memória → envio
+```
+
+| Etapa | Módulo | O que faz |
+|---|---|---|
+| Preferências | `preferencias/fontes.py` | lê do Microsoft Lists ou de um `preferencias.json` |
+| Coleta | `pipeline/coleta.py` | busca cada termo no Google News, uma vez por (termo, idioma) |
+| Triagem | `pipeline/triagem.py` | LLM descarta o que não é fato novo do setor |
+| Agrupamento | `pipeline/agrupamento.py` | dedup exata + blocos determinísticos + partição por LLM |
+| Resumo | `pipeline/resumo.py` | uma frase por **evento** (não por notícia) |
+| Memória | `pipeline/memoria.py` | evita reenviar o mesmo fato dias depois |
+| Envio | `entrega/` | HTML do boletim + Microsoft Graph |
+
+O agrupamento roda **uma vez sobre o pool inteiro**, com todos os tópicos e
+idiomas juntos. Cada evento carrega as categorias que o trouxeram, e a
+personalização por destinatário é um filtro aplicado no fim. É essa inversão
+que impede a mesma notícia de sair duas vezes por ter vindo de duas buscas
+diferentes — o modo de falha mais comum de um agregador por palavra-chave.
 
 ## Requisitos
 
 - Python 3.10+
-- Um app registrado no Microsoft Entra ID (Azure AD) com um certificado configurado, com permissão para enviar e-mail via Microsoft Graph (`Mail.Send`) e, se for usar a coleta de preferências, ler listas do SharePoint (`Sites.Read.All` ou escopo equivalente).
-- Uma chave de API da [Groq](https://console.groq.com/) (ou adapte `filtro_ia.py` para outro provedor compatível com a API da OpenAI).
+- Uma chave de API de **um** provedor de IA (ver abaixo).
+- Um app registrado no Microsoft Entra ID (Azure AD) com certificado, com
+  permissão `Mail.Send` no Microsoft Graph e, se for usar o Microsoft Lists para
+  as preferências, leitura de listas do SharePoint (`Sites.Read.All` ou equivalente).
 
 ## Instalação
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env      # e preencha
 ```
 
-Copie `.env.example` para `.env` e preencha todos os valores (ver seção abaixo). Coloque o arquivo `.pem` da chave privada do certificado (usado na autenticação MSAL) na raiz do projeto — o nome padrão é `private_key.pem`, configurável via `PRIVATE_KEY_FILE_PATH`. Esse arquivo nunca deve ser commitado.
+Coloque o `.pem` com a chave privada do certificado na raiz do projeto (nome
+padrão `private_key.pem`, configurável em `PRIVATE_KEY_FILE_PATH`). Ele nunca
+deve ser commitado — já está no `.gitignore`, junto com `.env` e o `header.png`.
 
-## Variáveis de ambiente (`.env`)
+## Escolhendo o provedor de IA
 
-| Variável | Descrição |
-|---|---|
-| `GROQ_API_KEY` | Chave de API da Groq, usada em `filtro_ia.py`. |
-| `TENANT_ID`, `CLIENT_ID`, `CERT_THUMBPRINT` | Dados do app registrado no Entra ID, usados na autenticação MSAL (Microsoft Graph e SharePoint). |
-| `PRIVATE_KEY_FILE_PATH` | Caminho do arquivo `.pem` com a chave privada do certificado. |
-| `EMAIL_REMETENTE` | Caixa de e-mail (licenciada no Microsoft 365) a partir da qual os boletins são enviados via Graph. |
-| `NOME_BOLETIM` | Nome exibido no assunto do e-mail e no cabeçalho do boletim. |
-| `LINK_PREFERENCIAS` | Link exibido no rodapé do e-mail para o destinatário alterar suas preferências. |
-| `SHAREPOINT_SITE_URL`, `SHAREPOINT_LIST_NAME` | URL do site e nome da lista do Microsoft Lists de onde as preferências dos destinatários são lidas. |
-| `SHAREPOINT_FIELD_CATEGORIES`, `SHAREPOINT_FIELD_LANGUAGES` | Nomes **internos** das colunas de escolha múltipla da lista — podem diferir do nome exibido. Ver [docs/microsoft-list.md](docs/microsoft-list.md#3-descobrir-o-nome-interno-das-colunas). |
-| `IDIOMA_PADRAO` | Idioma assumido quando o destinatário não seleciona nenhum. |
+Todo o projeto conversa com o modelo por uma única camada
+(`llm/provedores.py`). Trocar de provedor é trocar duas linhas do `.env`:
 
-## Personalizando as categorias de busca
+```ini
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_...
+```
 
-As categorias e termos de busca ficam em arquivos `.txt` separados por tabulação (`chave` \t `termo de busca no Google News`):
+| `LLM_PROVIDER` | Variável da chave | Modelo padrão | Observação |
+|---|---|---|---|
+| `groq` | `GROQ_API_KEY` | `llama-3.3-70b-versatile` | rápido e barato |
+| `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` | endpoint compatível com OpenAI |
+| `anthropic` | `ANTHROPIC_API_KEY` | `claude-opus-5` | SDK oficial; melhor qualidade no agrupamento |
+| `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` | |
+| `openrouter` | `OPENROUTER_API_KEY` | `meta-llama/llama-3.3-70b-instruct` | acesso a vários modelos |
+| `deepseek` | `DEEPSEEK_API_KEY` | `deepseek-chat` | |
+| `mistral` | `MISTRAL_API_KEY` | `mistral-large-latest` | |
+| `azure-openai` | `AZURE_OPENAI_API_KEY` | (o nome do seu deployment) | precisa de `AZURE_OPENAI_ENDPOINT` |
+| `ollama` | — | `llama3.1:8b` | roda local, sem chave; use `OLLAMA_BASE_URL` |
 
-- `keywords-to-gnews.txt` — dicionário padrão (português).
-- `keywords-to-gnews-en.txt`, `keywords-to-gnews-de.txt` — dicionários para inglês e alemão.
-- `languages-to-gnews.txt` — mapeia o nome do idioma (como aparece na lista) para o código de idioma usado pelo `gnews`.
+Preencha só a chave do provedor que vai usar; as outras podem ficar vazias.
+Provedores compatíveis com a API da OpenAI usam o pacote `openai`; Claude usa o
+SDK oficial `anthropic`.
 
-A primeira coluna de cada arquivo precisa bater exatamente com as opções cadastradas nas colunas de escolha da lista — é por esse texto que o de-para é feito.
+### Modelo por tarefa
 
-Para adaptar o projeto a outro tema (não apenas combustíveis renováveis), basta editar essas listas com as categorias e termos desejados — o restante do pipeline (busca, filtro por IA, resumo, agrupamento e envio) não precisa mudar.
+As três tarefas podem usar modelos diferentes:
 
-Se você não usa Microsoft Lists para gerenciar preferências, pode ignorar `coleta_preferencias.py` e gerar `preferencias.json` manualmente ou por outro processo — o formato esperado está documentado em [docs/microsoft-list.md](docs/microsoft-list.md#5-formato-dos-dados).
+```ini
+LLM_MODELO_TRIAGEM=llama-3.1-8b-instant
+LLM_MODELO_AGRUPAMENTO=llama-3.3-70b-versatile
+LLM_MODELO_RESUMO=llama-3.1-8b-instant
+```
+
+Se for economizar em alguma etapa, economize na **triagem**. O **agrupamento** é
+a tarefa sensível: usar um modelo pequeno demais nessa etapa é exatamente o que
+produzia o problema descrito em [docs/agrupamento.md](docs/agrupamento.md).
+Com `LLM_PROVIDER=anthropic` há ainda o controle de esforço por tarefa
+(`LLM_EFFORT_*`: `low`, `medium`, `high`, `xhigh`, `max`).
+
+Em branco, cada tarefa usa o modelo padrão do provedor.
+
+### Como adicionar um provedor novo
+
+Se ele expõe API compatível com a da OpenAI, basta uma linha em `PROVEDORES`,
+no topo de `llm/provedores.py`:
+
+```python
+"meu-provedor": ("MEU_PROVEDOR_API_KEY", "https://api.exemplo.com/v1", "modelo-padrao"),
+```
+
+Nenhuma outra parte do projeto muda.
+
+## Categorias e termos de busca
+
+Ficam em arquivos separados por tabulação (`categoria` ⇥ `termos no Google News`):
+
+- `keywords-to-gnews.txt` — português (padrão)
+- `keywords-to-gnews-en.txt`, `keywords-to-gnews-de.txt` — inglês e alemão
+- `languages-to-gnews.txt` — nome do idioma → código usado pelo `gnews`
+
+A primeira coluna precisa bater exatamente com as opções cadastradas nas
+colunas de escolha da lista — é por esse texto que o de-para é feito.
+
+Uma categoria pode listar vários termos separados por ` OR `. Cada termo é
+buscado **separadamente** no Google News e todos os resultados são creditados à
+mesma categoria. (A versão anterior mandava a expressão inteira entre aspas, o
+que o Google trata como busca por frase exata: toda categoria com mais de um
+termo devolvia zero resultado.)
+
+Para adaptar o projeto a outro tema — não apenas combustíveis renováveis —
+basta trocar o conteúdo desses arquivos. O restante do pipeline não muda.
+
+## Preferências dos destinatários
+
+`FONTE_PREFERENCIAS=sharepoint` lê de uma lista do Microsoft Lists alimentada
+por um formulário (vale sempre a resposta mais recente de cada e-mail). Para
+montar a lista e o formulário do zero:
+[docs/microsoft-list.md](docs/microsoft-list.md).
+
+`FONTE_PREFERENCIAS=arquivo` usa um `preferencias.json` mantido à mão — veja
+[`preferencias.exemplo.json`](preferencias.exemplo.json). É a opção para quem
+não usa Microsoft 365 ou quer só testar.
 
 ## Execução
 
@@ -56,6 +146,20 @@ Se você não usa Microsoft Lists para gerenciar preferências, pode ignorar `co
 python main.py
 ```
 
-O script gera automaticamente os arquivos de cache (`cache_bruto.json`, `cache_filtrado.json`), a lista de links já enviados (`links_enviados.txt`) e os logs (`logs/`). Esses arquivos contêm dados de execução (e, no caso de `preferencias.json` e `links_enviados.txt`, e-mails de destinatários reais), por isso já estão no `.gitignore` e não devem ser commitados.
+Modos úteis durante o ajuste:
 
-Para rodar periodicamente, agende `main.py` no Agendador de Tarefas do Windows, cron, ou outro orquestrador de sua preferência.
+```bash
+# roda tudo, não envia e-mail, não grava histórico, gera previa.html
+python main.py --simular
+
+# desliga a IA no agrupamento (só a camada determinística) — não gasta API
+python main.py --simular --sem-ia-no-agrupamento
+```
+
+O script gera `cache_bruto.json`, `cache_filtrado.json`,
+`historico_eventos.json`, `preferencias.json` e a pasta `logs/`. Todos contêm
+dados de execução (e, em `preferencias.json`, e-mails de destinatários reais),
+por isso já estão no `.gitignore`.
+
+Para rodar periodicamente, agende `main.py` no Agendador de Tarefas do Windows,
+no cron, ou em outro orquestrador de sua preferência.

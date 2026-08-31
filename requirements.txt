@@ -1,23 +1,21 @@
-# File: requirements.txt
-
-# Used in main.py for fetching news from Google News
+# Coleta das notícias
 gnews
-
-# Used in main.py for handling timezones
 pytz
 
-# Used in filtro_ia.py to interact with the Groq API (OpenAI-compatible)
-openai
-python-dotenv
-
-# Used in filtro_ia.py to make HTTP requests
+# Extração do conteúdo das páginas
 requests
-
-# Used in filtro_ia.py to parse HTML content
 beautifulsoup4
 
-# Used in filtro_ia.py for retry logic in API calls
+# Configuração e resiliência
+python-dotenv
 tenacity
 
-# Used in coleta_preferencias.py for modern authentication with Microsoft Entra ID
+# Provedores de IA
+# `openai` atende Groq, Gemini, OpenAI, OpenRouter, DeepSeek, Mistral,
+# Azure OpenAI e Ollama (todos expõem endpoints compatíveis).
+openai
+# Necessário apenas se LLM_PROVIDER=anthropic:
+anthropic
+
+# Microsoft Graph (envio de e-mail) e SharePoint (preferências)
 msal

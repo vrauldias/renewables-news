@@ -1,0 +1,24 @@
+[
+  {
+    "email": "pessoa@empresa.com",
+    "keywords_for_display": ["Biogás", "Biometano", "Sustainable Aviation Fuel"],
+    "search_configs": [
+      {
+        "lang_code": "pt-419",
+        "termos": [
+          {"categoria": "Biogás", "expressao": "biogás OR biodigestor"},
+          {"categoria": "Biometano", "expressao": "biometano OR gás renovável"},
+          {"categoria": "Sustainable Aviation Fuel", "expressao": "SAF OR bioquerosene OR combustível de aviação sustentável"}
+        ]
+      },
+      {
+        "lang_code": "en",
+        "termos": [
+          {"categoria": "Biogás", "expressao": "biogas"},
+          {"categoria": "Biometano", "expressao": "biomethane OR RNG OR renewable natural gas"},
+          {"categoria": "Sustainable Aviation Fuel", "expressao": "SAF OR sustainable aviation fuel OR biojet fuel"}
+        ]
+      }
+    ]
+  }
+]

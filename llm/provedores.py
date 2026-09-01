@@ -34,7 +34,12 @@ log = logging.getLogger(__name__)
 # pipeline/ têm folga extra para esse raciocínio.
 PROVEDORES = {
     "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "openai/gpt-oss-20b"),
-    "gemini": ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.5-flash"),
+    # gemini-3.5-flash-lite (não gemini-2.5-flash/3.x-flash "cheio"): no tier
+    # gratuito do Gemini os Flash "cheios" (2.5, 3, 3.5, 3.6, 3.7) têm cota de
+    # só 20 requisições/dia — a triagem sozinha já faz dezenas de chamadas em
+    # lotes de 25 notícias. Os *-flash-lite (3.1 e 3.5) têm 500/dia no free
+    # tier, o suficiente pra rodar o pipeline inteiro.
+    "gemini": ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-3.5-flash-lite"),
     "openai": ("OPENAI_API_KEY", None, "gpt-4o-mini"),
     "openrouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct"),
     "deepseek": ("DEEPSEEK_API_KEY", "https://api.deepseek.com", "deepseek-chat"),

@@ -67,7 +67,7 @@ GROQ_API_KEY=gsk_...
 | `LLM_PROVIDER` | Variável da chave | Modelo padrão | Observação |
 |---|---|---|---|
 | `groq` | `GROQ_API_KEY` | `openai/gpt-oss-20b` | os antigos llama-3.x viraram Enterprise (404) na Groq; gpt-oss é modelo de raciocínio — o projeto já manda `reasoning_effort` e dá folga extra de `max_tokens` para isso |
-| `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` | endpoint compatível com OpenAI |
+| `gemini` | `GEMINI_API_KEY` | `gemini-3.5-flash-lite` | endpoint compatível com OpenAI; no tier gratuito os Flash "cheios" (2.5/3/3.5/3.6/3.7) têm só 20 requisições/dia — use um `*-flash-lite` (500/dia) |
 | `anthropic` | `ANTHROPIC_API_KEY` | `claude-opus-5` | SDK oficial; melhor qualidade no agrupamento |
 | `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` | |
 | `openrouter` | `OPENROUTER_API_KEY` | `meta-llama/llama-3.3-70b-instruct` | acesso a vários modelos |

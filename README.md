@@ -66,7 +66,7 @@ GROQ_API_KEY=gsk_...
 
 | `LLM_PROVIDER` | Variável da chave | Modelo padrão | Observação |
 |---|---|---|---|
-| `groq` | `GROQ_API_KEY` | `llama-3.1-8b-instant` | rápido e barato; não usa raciocínio, evita json_validate_failed |
+| `groq` | `GROQ_API_KEY` | `openai/gpt-oss-20b` | os antigos llama-3.x viraram Enterprise (404) na Groq; gpt-oss é modelo de raciocínio — o projeto já manda `reasoning_effort` e dá folga extra de `max_tokens` para isso |
 | `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` | endpoint compatível com OpenAI |
 | `anthropic` | `ANTHROPIC_API_KEY` | `claude-opus-5` | SDK oficial; melhor qualidade no agrupamento |
 | `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` | |
@@ -85,16 +85,20 @@ SDK oficial `anthropic`.
 As três tarefas podem usar modelos diferentes:
 
 ```ini
-LLM_MODELO_TRIAGEM=llama-3.1-8b-instant
-LLM_MODELO_AGRUPAMENTO=llama-3.1-8b-instant
-LLM_MODELO_RESUMO=llama-3.1-8b-instant
+LLM_MODELO_TRIAGEM=openai/gpt-oss-20b
+LLM_MODELO_AGRUPAMENTO=openai/gpt-oss-120b
+LLM_MODELO_RESUMO=openai/gpt-oss-20b
 ```
 
 Se for economizar em alguma etapa, economize na **triagem**. O **agrupamento** é
 a tarefa sensível: usar um modelo pequeno demais nessa etapa é exatamente o que
 produzia o problema descrito em [docs/agrupamento.md](docs/agrupamento.md).
-Com `LLM_PROVIDER=anthropic` há ainda o controle de esforço por tarefa
-(`LLM_EFFORT_*`: `low`, `medium`, `high`, `xhigh`, `max`).
+
+O controle de esforço por tarefa (`LLM_EFFORT_*`: `low`, `medium`, `high`,
+`xhigh`, `max`) vale tanto para `anthropic` (`output_config.effort`) quanto
+para modelos de raciocínio da Groq (`reasoning_effort`, família `gpt-oss`) —
+os padrões (`low` na triagem e no resumo, `medium` no agrupamento) já
+equilibram velocidade e qualidade.
 
 Em branco, cada tarefa usa o modelo padrão do provedor.
 

@@ -73,7 +73,10 @@ def resumir_clusters(clusters):
                     usuario=prompts.USUARIO_RESUMO.format(
                         idioma=idioma, titulo=candidato["titulo_limpo"], texto=texto
                     ),
-                    max_tokens=200,
+                    # folga extra: modelos de raciocínio (ex.: gpt-oss na
+                    # Groq) gastam parte do orçamento "pensando" antes da
+                    # frase final.
+                    max_tokens=500,
                     tarefa="resumo",
                 )
             except Exception as erro:  # noqa: BLE001

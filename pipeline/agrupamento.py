@@ -244,7 +244,9 @@ def _particionar_com_ia(noticias, bloco):
     resposta = cliente.gerar(
         sistema=prompts.SISTEMA_AGRUPAMENTO,
         usuario=usuario,
-        max_tokens=1200,
+        # folga extra: modelos de raciocínio (ex.: gpt-oss na Groq) gastam
+        # parte do orçamento "pensando" antes do JSON final.
+        max_tokens=1800,
         tarefa="agrupamento",
         json_esperado=True,
     )

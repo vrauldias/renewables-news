@@ -73,7 +73,10 @@ def triar(pool):
                 resposta = cliente.gerar(
                     sistema=prompts.SISTEMA_TRIAGEM,
                     usuario=prompts.USUARIO_TRIAGEM.format(tema=tema, lista=lista),
-                    max_tokens=400,
+                    # folga além dos ~30-50 tokens de resposta: modelos de
+                    # raciocínio (ex.: gpt-oss na Groq) gastam parte do
+                    # orçamento "pensando" antes do JSON final.
+                    max_tokens=900,
                     tarefa="triagem",
                     json_esperado=True,
                 )

@@ -23,8 +23,17 @@ import config
 log = logging.getLogger(__name__)
 
 # nome -> (variável da chave, base_url, modelo padrão)
+#
+# Groq: os antigos llama-3.x (8B e 70B) viraram modelos "Enterprise" no
+# catálogo da Groq (ContactSales) e passaram a devolver 404 model_not_found
+# para chave de conta normal. Os modelos abertos de uso geral disponíveis
+# hoje (openai/gpt-oss-20b e openai/gpt-oss-120b) são todos de raciocínio
+# (formato Harmony): gastam parte do max_tokens pensando antes de escrever a
+# resposta. Por isso _chamar() manda reasoning_effort para eles (reaproveita
+# o LLM_EFFORT_* já usado no Claude) e os max_tokens de cada etapa em
+# pipeline/ têm folga extra para esse raciocínio.
 PROVEDORES = {
-    "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "llama-3.1-8b-instant"),
+    "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "openai/gpt-oss-20b"),
     "gemini": ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.5-flash"),
     "openai": ("OPENAI_API_KEY", None, "gpt-4o-mini"),
     "openrouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct"),
@@ -117,8 +126,9 @@ class ClienteCompativelOpenAI(_ClienteBase):
         self.cliente = OpenAI(api_key=chave, base_url=base_url)
 
     def _chamar(self, sistema, usuario, max_tokens, tarefa, json_esperado):
+        modelo = _modelo_da_tarefa(tarefa, self.modelo_padrao)
         parametros = {
-            "model": _modelo_da_tarefa(tarefa, self.modelo_padrao),
+            "model": modelo,
             "max_tokens": max_tokens,
             "temperature": 0.0,
             "messages": [
@@ -131,6 +141,11 @@ class ClienteCompativelOpenAI(_ClienteBase):
             # recente. Se o provedor recusar o parâmetro, repetimos sem ele: o
             # prompt já exige JSON e o parser tolera texto ao redor.
             parametros["response_format"] = {"type": "json_object"}
+        if self.nome == "groq" and _e_modelo_de_raciocinio(modelo):
+            # gpt-oss só existe em versão "raciocínio" na Groq: sem isso, o
+            # padrão da API já é gastar bastante max_tokens pensando antes de
+            # responder. "low" (padrão de LLM_EFFORT_*) mantém isso curto.
+            parametros["reasoning_effort"] = _effort_da_tarefa(tarefa)
 
         resposta = self._criar_tolerando_parametros(parametros)
         return (resposta.choices[0].message.content or "").strip()
@@ -154,6 +169,8 @@ class ClienteCompativelOpenAI(_ClienteBase):
                     parametros["max_completion_tokens"] = parametros.pop("max_tokens")
                 elif "temperature" in mensagem and "temperature" in parametros:
                     parametros.pop("temperature")
+                elif "reasoning_effort" in mensagem and "reasoning_effort" in parametros:
+                    parametros.pop("reasoning_effort")
                 else:
                     raise
         return self.cliente.chat.completions.create(**parametros)
@@ -212,6 +229,12 @@ def _modelo_da_tarefa(tarefa, padrao):
             f"Preencha LLM_MODELO_{tarefa.upper()} no .env."
         )
     return modelo
+
+
+def _e_modelo_de_raciocinio(modelo):
+    """Família gpt-oss (Groq) — único modelo aberto de uso geral disponível
+    lá hoje sem ser conta Enterprise — sempre "pensa" antes de responder."""
+    return "gpt-oss" in modelo
 
 
 def _effort_da_tarefa(tarefa):

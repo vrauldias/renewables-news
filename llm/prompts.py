@@ -18,27 +18,68 @@ SISTEMA_TRIAGEM = (
 
 USUARIO_TRIAGEM = """Tema da busca: {tema}
 
-Avalie cada manchete abaixo.
+O tema acima é apenas o termo que trouxe estas manchetes do buscador — ele NÃO
+garante que a manchete seja do setor. Confira sempre o assunto real.
 
-## Aprove (relevante) quando a manchete indicar um FATO CONCRETO E NOVO:
+## Passo 1 — Pertinência
+Descarte de imediato a manchete que não trate da cadeia de energia, bioenergia,
+combustíveis, celulose e papel, açúcar e álcool ou da indústria correlata — mesmo
+que ela repita uma palavra ou sigla do tema. Duas armadilhas frequentes:
+- sigla ou termo homônimo: "SAF" de clube de futebol ou de entidade civil, "RNG"
+  de jogo, "pulp" de odontologia ou de arte, "gás" em nota policial;
+- assunto vizinho, mas fora do escopo: exploração e produção de petróleo e gás
+  convencional, tarifa e mercado varejista de energia elétrica, mineração,
+  agronegócio e crédito rural sem ligação com energia ou combustível.
+
+Teste rápido: cubra a sigla ou a palavra do tema e releia a manchete. Se o que
+sobra não fala de energia, combustível ou da indústria que os produz, REJEITE.
+
+## Passo 2 — Aprove (relevante) quando a manchete indicar um FATO CONCRETO E NOVO:
 - novo projeto, planta, unidade, terminal ou expansão de capacidade;
 - contrato, offtake, joint venture, MoU, fusão, aquisição ou investimento com valor;
-- decisão regulatória, leilão, chamada pública, consulta, norma, licença ou tributo;
-- resultado operacional/financeiro relevante, entrada em operação, paralisação;
+- decisão regulatória, leilão, chamada pública, norma, licença ou tributo, e
+  também a abertura de consulta pública ou tomada de subsídios por um governo ou
+  agência ("abre consulta", "pede contribuições", "seeks input", "call for
+  evidence");
+- fiscalização, investigação, sanção, embargo, acidente ou paralisação em
+  instalação industrial do setor;
+- resultado operacional relevante, entrada em operação de uma unidade, ou entrada
+  de uma empresa em um mercado novo do setor (um banco que estreia em créditos de
+  remoção de carbono, uma empresa que passa a operar mais uma planta);
 - inovação tecnológica com aplicação industrial anunciada por empresa identificada.
 
-## Rejeite (irrelevante):
-- projeção de mercado, "mercado deve crescer X% até 20XX", relatório pago de consultoria,
-  ranking genérico, listas de "principais players";
+## Passo 3 — Rejeite (irrelevante):
+- projeção de mercado, "mercado deve crescer X% até 20XX", relatório pago de
+  consultoria, estudo acadêmico de potencial, ranking genérico, listas de
+  "principais players";
+- indicador macroeconômico, preço de bomba, cotação, safra, inadimplência, linha
+  de crédito genérica, recomendação de compra ou análise de ação;
+- governança corporativa sem efeito operacional: nomeação de conselheiro ou
+  diretor, mudança de estatuto, convocação de assembleia;
+- constatação estatística sem anúncio datável ("o país X dobrou sua frota");
 - agenda de evento, convite, webinar, chamada para inscrição, prêmio;
-- conteúdo institucional, publieditorial, matéria de opinião sem fato novo;
+- conteúdo institucional, publieditorial, matéria de opinião ou explicativa
+  ("o que é", "como funciona"), sem fato novo;
 - vaga de emprego, concurso, edital de contratação;
-- esporte, entretenimento, política partidária, polícia, celebridades, loteria;
-- assuntos alheios ao setor de energia/bioenergia/combustíveis/indústria correlata.
+- esporte, entretenimento, política partidária, polícia, obituário, celebridades,
+  loteria.
 
 ## Regra de corte
 Na dúvida entre aprovar e rejeitar, REJEITE. Um boletim curto e limpo vale mais
 que um boletim longo e diluído.
+
+## Exemplo resolvido
+[0] Raízen fecha contrato de 10 anos para fornecer 200 mil m³/ano de biometano à Vibra
+[1] Cruzeiro conclui a venda de 90% da SAF para investidor norte-americano
+[2] Preço médio do etanol nos postos cai 1,2% na semana, aponta levantamento
+[3] Ibama embarga terminal de combustíveis em Suape após vazamento
+[4] Mercado global de amônia verde deve crescer 38% ao ano até 2032
+
+Saída: {{"relevantes": [0, 3]}}
+
+Raciocínio: 0 é contrato novo, com partes identificadas e volume; 3 é ação de
+fiscalização sobre instalação do setor. 1 usa "SAF" como sociedade anônima do
+futebol — não é do setor. 2 é variação de preço. 4 é projeção de mercado.
 
 ## Manchetes
 {lista}

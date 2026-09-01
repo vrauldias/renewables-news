@@ -50,6 +50,16 @@ def _serializavel(objeto):
     return sorted(objeto) if isinstance(objeto, set) else str(objeto)
 
 
+def _carregar_cache_bruto():
+    if not os.path.exists(config.ARQUIVO_CACHE_BRUTO):
+        sys.exit(
+            f"ERRO: --usar-cache exige um '{config.ARQUIVO_CACHE_BRUTO}' de uma execução "
+            "anterior. Rode uma vez sem essa flag para gerá-lo."
+        )
+    with open(config.ARQUIVO_CACHE_BRUTO, "r", encoding="utf-8") as arquivo:
+        return json.load(arquivo)
+
+
 def eventos_do_perfil(clusters, perfil):
     """Eventos que tocam ao menos uma categoria escolhida pelo destinatário."""
     interesses = set(perfil.get("keywords_for_display", []))
@@ -64,11 +74,22 @@ def main():
                             help="roda tudo mas não envia e-mail nem grava o histórico")
     analisador.add_argument("--sem-ia-no-agrupamento", action="store_true",
                             help="usa apenas o agrupamento determinístico")
+    analisador.add_argument("--usar-cache", action="store_true",
+                            help="pula a coleta e reaproveita o cache_bruto.json da última "
+                                 "execução — para testar a LLM sem esperar a coleta inteira")
+    analisador.add_argument("--limite-noticias", type=int, default=None, metavar="N",
+                            help="corta o pool para as N primeiras notícias antes da triagem — "
+                                 "combine com --usar-cache para testar a LLM em segundos")
+    analisador.add_argument("--teste-envio", action="store_true",
+                            help="envia de verdade, mas só para EMAIL_REMETENTE (ignora os "
+                                 "destinatários reais) e não grava histórico")
     argumentos = analisador.parse_args()
 
     configurar_log()
     if argumentos.sem_ia_no_agrupamento:
         config.AGRUP_USAR_IA = False
+    if argumentos.simular and argumentos.teste_envio:
+        logging.warning("--simular e --teste-envio juntos: prevalece --simular (nada é enviado).")
 
     config.validar(exigir_microsoft=not argumentos.simular)
 
@@ -85,8 +106,18 @@ def main():
 
     # --- 2. Coleta ------------------------------------------------------------
     logging.info("\n[2/6] Coleta no Google News")
-    pool = coleta.coletar(perfis, config.PERIODO_BUSCA)
-    salvar_json(config.ARQUIVO_CACHE_BRUTO, pool)
+    if argumentos.usar_cache:
+        pool = _carregar_cache_bruto()
+        logging.info("  Usando %s da execução anterior: %s notícias (coleta pulada).",
+                     config.ARQUIVO_CACHE_BRUTO, len(pool))
+    else:
+        pool = coleta.coletar(perfis, config.PERIODO_BUSCA)
+        salvar_json(config.ARQUIVO_CACHE_BRUTO, pool)
+
+    if argumentos.limite_noticias:
+        pool = pool[:argumentos.limite_noticias]
+        logging.info("  Cortado para as %s primeiras (--limite-noticias).", len(pool))
+
     if not pool:
         logging.warning("Nenhuma notícia coletada. Encerrando.")
         return 0
@@ -140,6 +171,21 @@ def main():
         logging.warning("Imagem de cabeçalho '%s' não encontrada.", config.IMAGEM_CABECALHO)
 
     data_envio = time.strftime("%d/%m/%Y")
+
+    if argumentos.teste_envio:
+        corpo = email_html.montar(clusters, [], cid)
+        ok = graph.enviar_email(
+            token, [config.EMAIL_REMETENTE],
+            f"TESTE | {config.NOME_BOLETIM} ({data_envio})",
+            corpo, imagem_dados, cid,
+        )
+        if ok:
+            logging.info(
+                "Modo teste de envio: e-mail com %s eventos mandado só para %s. "
+                "Histórico não foi alterado.", len(clusters), config.EMAIL_REMETENTE,
+            )
+        return 0 if ok else 1
+
     enviados = 0
     for perfil in perfis:
         selecionados = eventos_do_perfil(clusters, perfil)

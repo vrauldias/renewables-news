@@ -154,7 +154,24 @@ python main.py --simular
 
 # desliga a IA no agrupamento (só a camada determinística) — não gasta API
 python main.py --simular --sem-ia-no-agrupamento
+
+# testa só a chamada à LLM (provedor novo, modelo novo, prompt novo) em
+# segundos: reaproveita o cache_bruto.json da última coleta em vez de
+# esperar os ~10 min de busca no Google News, e corta para poucas notícias
+python main.py --simular --usar-cache --limite-noticias 30
+
+# envia um e-mail de verdade — testa Graph, imagem de cabeçalho e o HTML
+# renderizado no cliente real —, mas só para EMAIL_REMETENTE, sem tocar
+# nos destinatários reais nem no histórico
+python main.py --teste-envio
+
+# as duas coisas juntas: LLM rápida + um envio de teste no fim
+python main.py --usar-cache --limite-noticias 30 --teste-envio
 ```
+
+`--usar-cache` exige um `cache_bruto.json` de alguma execução anterior (o
+próprio `python main.py` grava um a cada rodada, exceto quando `--usar-cache`
+já está em uso). Sem esse arquivo, a flag para com uma mensagem de erro clara.
 
 O script gera `cache_bruto.json`, `cache_filtrado.json`,
 `historico_eventos.json`, `preferencias.json` e a pasta `logs/`. Todos contêm

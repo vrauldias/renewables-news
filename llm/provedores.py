@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 # nome -> (variável da chave, base_url, modelo padrão)
 PROVEDORES = {
-    "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+    "groq": ("GROQ_API_KEY", "https://api.groq.com/openai/v1", "openai/gpt-oss-120b"),
     "gemini": ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-2.5-flash"),
     "openai": ("OPENAI_API_KEY", None, "gpt-4o-mini"),
     "openrouter": ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct"),

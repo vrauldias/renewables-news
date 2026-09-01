@@ -66,7 +66,7 @@ GROQ_API_KEY=gsk_...
 
 | `LLM_PROVIDER` | Variável da chave | Modelo padrão | Observação |
 |---|---|---|---|
-| `groq` | `GROQ_API_KEY` | `llama-3.3-70b-versatile` | rápido e barato |
+| `groq` | `GROQ_API_KEY` | `openai/gpt-oss-120b` | rápido e barato |
 | `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` | endpoint compatível com OpenAI |
 | `anthropic` | `ANTHROPIC_API_KEY` | `claude-opus-5` | SDK oficial; melhor qualidade no agrupamento |
 | `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` | |
@@ -85,9 +85,9 @@ SDK oficial `anthropic`.
 As três tarefas podem usar modelos diferentes:
 
 ```ini
-LLM_MODELO_TRIAGEM=llama-3.1-8b-instant
-LLM_MODELO_AGRUPAMENTO=llama-3.3-70b-versatile
-LLM_MODELO_RESUMO=llama-3.1-8b-instant
+LLM_MODELO_TRIAGEM=openai/gpt-oss-20b
+LLM_MODELO_AGRUPAMENTO=openai/gpt-oss-120b
+LLM_MODELO_RESUMO=openai/gpt-oss-20b
 ```
 
 Se for economizar em alguma etapa, economize na **triagem**. O **agrupamento** é

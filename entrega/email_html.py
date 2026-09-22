@@ -14,6 +14,11 @@ body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;background-color:
 .email-container{width:100%;max-width:680px;margin:20px auto;background-color:#fff;border:1px solid #ddd}
 .header-image{width:100%;max-height:150px;object-fit:cover}
 .content{padding:20px}
+.aviso-box{background-color:#e7f3fe;border-left:5px solid #005a9e;padding:15px;
+     margin-bottom:25px;font-size:14px;color:#333}
+.aviso-box p{margin:10px 0}
+.aviso-box p:first-child{margin-top:0}
+.aviso-box p:last-child{margin-bottom:0}
 .news-title-section h1{color:#333;font-size:22px;margin-top:0}
 .news-title-section p{color:#555;font-size:14px}
 .news-item{margin-bottom:25px;padding-bottom:15px;border-bottom:1px solid #eee}
@@ -29,6 +34,11 @@ body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;background-color:
 .footer{padding:15px;text-align:center;background-color:#f9f9f9;border-top:1px solid #ddd}
 .footer p{font-size:12px;color:#888;margin:0}
 """
+
+# Recado exibido no topo do boletim, logo abaixo do cabeçalho. Deixe a string
+# vazia ("") quando o aviso não fizer mais sentido — nenhuma outra parte do
+# código precisa mudar.
+AVISO = ""
 
 
 def formatar_data(data_gmt):
@@ -99,6 +109,8 @@ def montar(clusters, categorias_usuario, imagem_cid=None):
         f'font-size:28px;font-weight:bold">{titulo_pagina}</div>'
     )
 
+    aviso = f'<div class="aviso-box">{AVISO.strip()}</div>' if AVISO.strip() else ""
+
     rodape_filtros = ""
     if config.PALAVRAS_EXCLUIDAS_TITULO:
         termos = html.escape(", ".join(config.PALAVRAS_EXCLUIDAS_TITULO))
@@ -112,6 +124,7 @@ def montar(clusters, categorias_usuario, imagem_cid=None):
 <div class="email-container">
 {cabecalho}
 <div class="content">
+{aviso}
 <div class="news-title-section">
 <h1>Notícias das últimas {html.escape(config.PERIODO_BUSCA)}</h1>
 <p><strong>Suas preferências:</strong> {preferencias}</p>
